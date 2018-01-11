@@ -1,0 +1,4 @@
+usr/include
+usr/lib/*/libgeonames.so
+usr/lib/*/pkgconfig
+usr/share/gtk-doc

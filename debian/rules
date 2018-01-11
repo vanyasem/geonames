@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+# -*- Mode: Makefile; indent-tabs-mode: t; tab-width: 4 -*-
+
+export DPKG_GENSYMBOLS_CHECK_LEVEL=4
+
+%:
+	dh $@ --with autoreconf
+
+override_dh_autoreconf:
+	NOCONFIGURE=1 dh_autoreconf ./autogen.sh
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-gtk-doc
+
+override_dh_install:
+	# don't install libtool files they are not needed
+	find debian -name *.la -delete
+	
+	# drop any translations for locales we don't care about
+	for mo in debian/tmp/usr/share/locale/*; do \
+		export locale="$$(basename $${mo} .po)"; \
+		if ! grep -q "^$${locale}[ ._]" /usr/share/i18n/SUPPORTED; then \
+			rm -r "$${mo}"; \
+		fi; \
+	done
+	
+	dh_install --fail-missing
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	# Have to specify LC_ALL manually until https://launchpad.net/bugs/1566590
+	# is fixed.
+	LC_ALL=C.UTF-8 dh_auto_test -- VERBOSE=1
+endif
